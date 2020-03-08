@@ -16,7 +16,8 @@
   - no event handling
   - based on: https://www.youtube.com/watch?v=f2mMOiCSj5c
 
-### Running
+## Setup
 - `npm install`
+
+## Running
 - `npm run vdom` - will log the VDOM to the console 
-- `node 00-hello.jsx` - run the js
