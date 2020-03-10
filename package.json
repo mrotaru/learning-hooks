@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "vdom": "babel --presets @babel/preset-env --plugins @babel/plugin-syntax-jsx,@babel/plugin-transform-react-jsx 00-vdom.jsx -o 00-vdom.js && node 00-vdom.js"
+    "start": "babel index.jsx -o index.js && node index.js"
   },
   "keywords": [],
   "author": "",

@@ -1,0 +1,21 @@
+{
+  "plugins": [
+    "@babel/plugin-syntax-jsx",
+    "@babel/plugin-transform-react-jsx"
+  ],
+  "env": {
+    "current": {
+      "presets": [
+        [
+          "@babel/preset-env",
+          {
+            "targets": {
+              "node": "current"
+            },
+            "useBuiltIns": "usage"
+          }
+        ]
+      ]
+    }
+  }
+}
