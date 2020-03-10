@@ -1,9 +1,14 @@
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
-const dom = new JSDOM(`<!DOCTYPE html><div id="root"></div>`, { runScripts: "dangerously" });
+const dom = new JSDOM(`<!DOCTYPE html><div id="root"></div>`, {
+    runScripts: "dangerously",
+    includeNodeLocations: true,
+});
 const window = dom.window;
 const document = window.document;
+
+// create react element from function or HTML tag
 
 const React = {
     createElement: (tag, props, ...children) => {
@@ -18,9 +23,48 @@ const React = {
     }
 }
 
+// useState hook
+
 let useStateStates = [];
 let useStateInitialStates = [];
 let useStateIndex = 0;
+
+const useState = initialState => {
+    const myIndex = useStateIndex;
+    useStateInitialStates[myIndex] = initialState;
+    let state = useStateStates.hasOwnProperty(myIndex)
+        ? useStateStates[myIndex]
+        : useStateInitialStates[myIndex]
+    const setState = newState => {
+        useStateStates[myIndex] = newState;
+    }
+    useStateIndex++;
+    return [state, setState];
+}
+
+
+// useRef hook
+
+let useRefObjects = [];
+let useRefObjectsIndexMap = new Map();
+let useRefIndex = 0;
+
+const useRef = initialObject => {
+    const myIndex = useRefIndex;
+    let returnObject;
+    if (useRefObjects.hasOwnProperty(myIndex)) {
+        returnObject = useRefObjects[myIndex];
+    } else {
+        const useRefObject = {current: initialObject};
+        returnObject = useRefObject;
+        useRefObjects[myIndex] = useRefObject;
+    }
+    useRefObjectsIndexMap.set(returnObject, returnObject);
+    useRefIndex++;
+    return returnObject;
+}
+
+// render function
 
 const render = (reactElement, domContainer) => {
     if (Array.isArray(reactElement)) {
@@ -31,12 +75,17 @@ const render = (reactElement, domContainer) => {
         domContainer.textContent += String(reactElement);
     } else {
         const { tag, props } = reactElement;
-        const { children } = props;
+        const { children, ref } = props;
+        const specialProps = ["children", "ref"];
         let domElement = document.createElement(tag);
-        Object.keys(props).filter(key => key !== "children").forEach(key => {
+        Object.keys(props).filter(key => !specialProps.includes(key)).forEach(key => {
             let domPropName = key === "onClick" ? "onclick" : key;
             domElement[domPropName] = props[key];
         })
+        if (ref) {
+            console.log('domElement:', domElement, domElement.textContent);
+            useRefObjectsIndexMap.get(ref).current = domElement;
+        }
         if (children) {
             children.forEach(child => {
                 render(child, domElement);
@@ -46,29 +95,26 @@ const render = (reactElement, domContainer) => {
     }
 }
 
-const useState = initialState => {
-    const myIndex = useStateIndex;
-    useStateInitialStates[myIndex] = initialState;
-    useStateIndex += 1;
-    let state = useStateStates.hasOwnProperty(myIndex)
-        ? useStateStates[myIndex]
-        : useStateInitialStates[myIndex]
-    const setState = newState => {
-        useStateStates[myIndex] = newState;
-    }
-    return [state, setState];
-}
+// simple component
+
+let obj = { text: "my object" };
 
 const App = ({ children }) => {
     const [count, setCount] = useState(0);
     const [lastClickTimestamp, setLastClickTimestamp] = useState("never");
+    const btnRef = useRef(null);
+    const objRef = useRef(obj);
     return (
         <div className="container">
             <p>You clicked {count} times; last click: {lastClickTimestamp}</p>
-            <button onClick={() => {
-                setCount(count + 1);
-                setLastClickTimestamp(Date.now());
-            } }>
+            <button
+                ref={btnRef}
+                onClick={() => {
+                    setCount(count + 1);
+                    setLastClickTimestamp(Date.now());
+                    objRef.current.clickCount = count + 1;
+                }}
+            >
                 Click me
             </button>
             {children}
@@ -80,6 +126,7 @@ let renderCount = 0;
 
 const rerender = () => {
     useStateIndex = 0;
+    useRefIndex = 0;
     renderCount++;
     document.querySelector("#root").textContent = "";
     const reactElement = <App />;
@@ -102,6 +149,8 @@ document.querySelector("button").click();
 [reactElement, html] = rerender();
 console.log(`Render ${renderCount}`);
 console.log(html);
+
+console.log(JSON.stringify(Array.from(useRefObjects)[0].current.textContent, null, 2));
 
 // utilities
 

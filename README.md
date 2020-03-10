@@ -20,4 +20,4 @@
 - `npm install`
 
 ## Running
-- `npm run vdom` - will log the VDOM to the console 
+- `npm start`
